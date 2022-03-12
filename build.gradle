@@ -4,6 +4,6 @@ plugins {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'cs455.overlay.Main'
+        attributes 'Main-Class': 'cs455.scaling.Main'
     }
 } 
