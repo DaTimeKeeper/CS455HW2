@@ -1,5 +1,5 @@
-package src.main.java.cs455.scaling;
-
+package cs455.scaling;
+ 
 public class Main {
     public static void main(String[] args) {
         try {  
