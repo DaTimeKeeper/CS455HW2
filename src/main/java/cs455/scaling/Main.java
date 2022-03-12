@@ -4,7 +4,6 @@ public class Main {
     public static void main(String[] args) {
         try {  
             if (args[1].equals("server")){
-                String name = args[1];
                 int port = Integer.parseInt(args[2]);
                 int poolSize = Integer.parseInt(args[3]);
                 int batchSize = Integer.parseInt(args[4]);
@@ -12,7 +11,6 @@ public class Main {
                 Server server = new Server(port, poolSize, batchSize, batchTime);
             }
             else if (args[1].equals("client")) {
-                //String nodeName = args[1];
                 String serverHostName = args[2];
                 int serverPort = Integer.parseInt(args[3]);
                 int msgRate = Integer.parseInt(args[4]);
