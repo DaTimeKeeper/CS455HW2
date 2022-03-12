@@ -2,7 +2,7 @@ package src.main.java.cs455.scaling;
 
 public class Main {
     public static void main(String[] args) {
-        try { 
+        try {  
             if (args[1].equals("server")){
                 String regName = args[1];
                 int port = Integer.parseInt(args[2]);
