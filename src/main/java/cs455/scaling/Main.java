@@ -1,5 +1,7 @@
 package cs455.scaling;
- 
+
+import java.io.IOException;
+
 public class Main {
     public static void main(String[] args) {
         try {  
@@ -8,19 +10,23 @@ public class Main {
                 int poolSize = Integer.parseInt(args[3]);
                 int batchSize = Integer.parseInt(args[4]);
                 int batchTime = Integer.parseInt(args[5]);
+                
                 Server server = new Server(port, poolSize, batchSize, batchTime);
+                server.run();
             }
             else if (args[1].equals("client")) {
                 String serverHostName = args[2];
                 int serverPort = Integer.parseInt(args[3]);
                 int msgRate = Integer.parseInt(args[4]);
+                
                 Client client = new Client(serverHostName, serverPort, msgRate);
+                client.run();
             }
             else {
-                System.out.println("Error: Incorrect args\n Use 'server portnum thread-pool-size batch-size batch-time' or 'client server-host server-port message-rate'");
+                System.out.println("Error: Incorrect args\n Use 'server [portnum] [thread-pool-size] [batch-size] [batch-time]' or 'client [server-host] [server-port] [message-rate]'");
             }
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
     }
 }
