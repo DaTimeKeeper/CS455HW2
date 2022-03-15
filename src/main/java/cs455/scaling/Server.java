@@ -2,9 +2,11 @@ package cs455.scaling;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -28,11 +30,10 @@ public class Server {
 
         while (true) {
             System.out.printf("Listening for connections on port %d\n", port);
-            //Block until one connection accepted
             selector.select();
             System.out.println("Activity on selector!");
 
-            //Only keys that have activity on selector
+            //Only keys that have activity on selector will be used
             Set<SelectionKey> selectedKeys = selector.selectedKeys();
             Iterator<SelectionKey> iter = selectedKeys.iterator();
 
@@ -45,23 +46,39 @@ public class Server {
 
                 //New connection
                 if (key.isAcceptable()) {
-                    //System.out.println("Acceptable!");
-                    Runnable task = () -> System.out.println(Thread.currentThread().getName() + " is working!");
-                    for (int i = 0; i < 100; i++) {
-                        manager.addTask(task);
-                    }
-                    manager.begin();
+                    register(selector, serverSocket);
                 }
-                //Old connection has data
+                //Registered key has data
                 if (key.isReadable()) {
-                    System.out.println("Readable!");
+                    read(key);
                 }
 
-                //Don't loop over a key we're done with
+                //Remove key so we don't loop over the same one
                 iter.remove();
-                System.out.println("Done");
             }
         }
+    }
+
+    private void read(SelectionKey key) throws IOException{
+        ByteBuffer buffer = ByteBuffer.allocate(256);
+        SocketChannel client = (SocketChannel) key.channel();
+        int bytesRead = client.read(buffer);
+
+        if (bytesRead == -1) {
+            client.close();
+            System.out.println("Client disconnected");
+        }
+        else {
+            System.out.println("Recieved " + new String(buffer.array()));
+        }
+    }
+
+    //Register channel to OP.READ, will activate key is socket has data
+    private void register(Selector selector, ServerSocketChannel serverSocket) throws IOException{
+        SocketChannel client = serverSocket.accept();
+        client.configureBlocking(false);
+        client.register(selector, SelectionKey.OP_READ);
+        System.out.println("Registered client");
     }
      
 }

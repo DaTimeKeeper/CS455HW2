@@ -20,7 +20,7 @@ public class Main {
                 int msgRate = Integer.parseInt(args[4]);
                 
                 Client client = new Client(serverHostName, serverPort, msgRate);
-                client.run();
+                client.connect();
             }
             else {
                 System.out.println("Error: Incorrect args\n Use 'server [portnum] [thread-pool-size] [batch-size] [batch-time]' or 'client [server-host] [server-port] [message-rate]'");

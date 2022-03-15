@@ -19,9 +19,17 @@ public class Client {
         this.msgRate = msgRate;
     }
       
-    public void run() throws IOException {
+    public void connect() throws IOException {
         //Connect to server
         clientSocket = SocketChannel.open(new InetSocketAddress(serverHostName, serverPort));
         buffer = ByteBuffer.allocate(256);
+
+        buffer = ByteBuffer.wrap("Test".getBytes());
+        try {
+            clientSocket.write(buffer);
+            buffer.clear();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
