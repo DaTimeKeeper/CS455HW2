@@ -12,7 +12,7 @@ public class Main {
                 int batchTime = Integer.parseInt(args[5]);
                 
                 Server server = new Server(port, poolSize, batchSize, batchTime);
-                server.run();
+                server.handleIncomingConnections();
             }
             else if (args[1].equals("client")) {
                 String serverHostName = args[2];
