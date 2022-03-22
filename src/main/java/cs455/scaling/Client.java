@@ -9,6 +9,7 @@ import java.nio.channels.SocketChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
+import java.util.ArrayList;
 
 public class Client {
     private static SocketChannel clientSocket;
@@ -16,6 +17,8 @@ public class Client {
 
     private String serverHostName, clientName;
     private int serverPort, msgRate;
+
+    private ArrayList<String> clientHashValue = new ArrayList<String>(); 
   
     public Client(String serverHostName, int serverPort, int msgRate) {
         this.serverHostName = serverHostName;
@@ -54,6 +57,7 @@ public class Client {
         byte[] payload = GetByteArray(8);
         try {
             String hash = SHA1FromBytes(payload);
+            storeHashValues(hash);
             System.out.println("Client hash :"+ hash);
 
         } catch (NoSuchAlgorithmException e1) {
@@ -69,5 +73,9 @@ public class Client {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void storeHashValues(String hashValue) {
+        clientHashValue.add(hashValue); 
     }
 }
