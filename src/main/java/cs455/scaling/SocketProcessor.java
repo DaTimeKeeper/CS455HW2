@@ -38,6 +38,7 @@ public class SocketProcessor implements Runnable {
                     //New connection
                     if (key.isAcceptable()) {
                         register(selector, serverSocket);
+
                     }
                     //Registered key has data
                     if (key.isReadable()) {
@@ -66,8 +67,11 @@ public class SocketProcessor implements Runnable {
 
     private void read(SelectionKey key) {
         try {
-            ByteBuffer buffer = ByteBuffer.allocate(256);
+            ByteBuffer buffer = ByteBuffer.allocate(8192);
             SocketChannel client = (SocketChannel) key.channel();
+            String clientAddress = client.getRemoteAddress().toString();
+            System.out.println("ip addfress:  " + clientAddress);
+        
             int bytesRead = client.read(buffer);
 
             if (bytesRead == -1) {
@@ -75,12 +79,14 @@ public class SocketProcessor implements Runnable {
                 System.out.println("Client disconnected");
             }
             else {
-                System.out.println("Recieved \'" + new String(buffer.array()) + "\'");
+                HashProcessor hashProcessorTask = new HashProcessor(clientAddress, client, buffer);
+                //System.out.println("Recieved \'" + new String(buffer.array()) + "\'");
+                manager.addTask(hashProcessorTask);
             }
 
             //ADD HASHING TASKS TO QUEUE HERE!
-            Runnable testTask = () -> System.out.println("This is a task!");
-            manager.addTask(testTask);
+            // Runnable testTask = () -> System.out.println("This is a task!");
+            // manager.addTask(testTask);
         } catch (Exception e) {
             e.printStackTrace();
         }
