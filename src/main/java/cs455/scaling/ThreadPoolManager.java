@@ -32,7 +32,7 @@ public class ThreadPoolManager {
             Worker worker = new Worker();
             worker.start();
         }
-        System.out.println(Thread.activeCount());
+        System.out.println("Num threads running:" + Thread.activeCount());
     }
 
     public void printTasks() {
@@ -55,7 +55,7 @@ public class ThreadPoolManager {
                 if (!taskQueue.isEmpty()) {
                     Runnable task = taskQueue.poll();
                     if ((task ) != null) {
-                        System.out.println(currentThread().getName() + " is running");
+                        System.out.print(currentThread().getName() + ": ");
                         task.run();
                     }
                 }

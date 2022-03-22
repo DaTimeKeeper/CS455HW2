@@ -72,14 +72,14 @@ public class SocketProcessor implements Runnable {
 
             if (bytesRead == -1) {
                 client.close();
-                //System.out.println("Client disconnected");
+                System.out.println("Client disconnected");
             }
             else {
-                System.out.println("Recieved " + new String(buffer.array()));
+                System.out.println("Recieved \'" + new String(buffer.array()) + "\'");
             }
 
-            //ADD HASHING TASKS HERE!
-            Runnable testTask = () -> System.out.println("Running!");
+            //ADD HASHING TASKS TO QUEUE HERE!
+            Runnable testTask = () -> System.out.println("This is a task!");
             manager.addTask(testTask);
         } catch (Exception e) {
             e.printStackTrace();
