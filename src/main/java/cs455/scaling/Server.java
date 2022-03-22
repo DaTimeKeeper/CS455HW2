@@ -26,41 +26,14 @@ public class Server {
         
         serverSocket.bind(new InetSocketAddress(port));
         serverSocket.configureBlocking(false);
-        //All connections with OP_ACCEPT will be sent to serverSocket
+
         serverSocket.register(selector, SelectionKey.OP_ACCEPT);
         System.out.printf("Listening for connections on port %d\n", port);
+
+        SocketProcessor socketProcessor = new SocketProcessor(selector, serverSocket, manager);
+        manager.addTask(socketProcessor);
         
-        while (true) {
-            selector.select();
-            System.out.println("Activity on selector!");
-
-            //Only keys that have activity on selector will be used
-            Set<SelectionKey> selectedKeys = selector.selectedKeys();
-            Iterator<SelectionKey> iter = selectedKeys.iterator();
-
-            //AcceptConn acceptConn = new AcceptConn(iter, serverSocket, selector);
-           // manager.addTask(acceptConn);
-
-            // while (iter.hasNext()) {
-            //     SelectionKey key = iter.next();
-    
-            //     if (key.isValid() == false) {
-            //         continue;
-            //     }
-    
-            //     //New connection
-            //     if (key.isAcceptable()) {
-            //         register(selector, serverSocket);
-            //     }
-            //     //Registered key has data
-            //     if (key.isReadable()) {
-            //         read(key);
-            //     }
-    
-            //     //Remove key so we don't loop over the same one
-            //     iter.remove();
-            // }
-        }
+        
     }
 
     private void read(SelectionKey key) {
@@ -74,7 +47,7 @@ public class Server {
                 System.out.println("Client disconnected");
             }
             else {
-                System.out.println("Recieved " + new String(buffer.array()));
+                System.out.println("Recieved: " + new String(buffer.array()));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -87,7 +60,8 @@ public class Server {
             SocketChannel client = serverSocket.accept();
             client.configureBlocking(false);
             client.register(selector, SelectionKey.OP_READ);
-            System.out.println("Registered client");
+            System.out.println("Registered client " + selector.selectedKeys().size());
+            Thread.sleep(5000);
         } catch (Exception e) {
             e.printStackTrace();
         }

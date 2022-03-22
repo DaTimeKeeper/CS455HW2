@@ -52,9 +52,10 @@ public class ThreadPoolManager {
         @Override
         public void run() {
             while (true) {
-                if (!taskQueue.isEmpty()) { 
-                    Runnable task;
-                    if ((task = taskQueue.poll()) != null) {
+                if (!taskQueue.isEmpty()) {
+                    Runnable task = taskQueue.poll();
+                    if ((task ) != null) {
+                        System.out.println(currentThread().getName() + " is running");
                         task.run();
                     }
                 }

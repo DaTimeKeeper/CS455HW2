@@ -18,15 +18,16 @@ public class Main {
                 String serverHostName = args[2];
                 int serverPort = Integer.parseInt(args[3]);
                 int msgRate = Integer.parseInt(args[4]);
-                
+                String clientName = args[5];
                 Client client = new Client(serverHostName, serverPort, msgRate);
+                //Client client = new Client(serverHostName, serverPort, msgRate);
                 client.connect();
             }
             else {
                 System.out.println("Error: Incorrect args\n Use 'server [portnum] [thread-pool-size] [batch-size] [batch-time]' or 'client [server-host] [server-port] [message-rate]'");
             }
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 }

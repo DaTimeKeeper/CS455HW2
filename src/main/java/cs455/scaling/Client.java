@@ -10,7 +10,7 @@ public class Client {
     private static SocketChannel clientSocket;
     private static ByteBuffer buffer;
 
-    private String serverHostName;
+    private String serverHostName, clientName;
     private int serverPort, msgRate;
   
     public Client(String serverHostName, int serverPort, int msgRate) {
@@ -19,12 +19,19 @@ public class Client {
         this.msgRate = msgRate;
     }
       
+    public Client(String serverHostName, int serverPort, int msgRate, String clientName) {
+        this.serverHostName = serverHostName;
+        this.serverPort = serverPort;
+        this.msgRate = msgRate;
+        this.clientName = clientName;
+    }
+
     public void connect() throws IOException {
         //Connect to server
         clientSocket = SocketChannel.open(new InetSocketAddress(serverHostName, serverPort));
         buffer = ByteBuffer.allocate(256);
 
-        buffer = ByteBuffer.wrap("Test".getBytes());
+        buffer = ByteBuffer.wrap(clientName.getBytes());
         try {
             clientSocket.write(buffer);
             buffer.clear();
