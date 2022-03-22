@@ -23,7 +23,7 @@ public class Client {
         this.serverHostName = serverHostName;
         this.serverPort = serverPort;
         this.msgRate = msgRate;
-        this.clientName = clientName;
+        //this.clientName = clientName;
     }
 
     public void connect() throws IOException {
@@ -31,7 +31,7 @@ public class Client {
         clientSocket = SocketChannel.open(new InetSocketAddress(serverHostName, serverPort));
         buffer = ByteBuffer.allocate(256);
 
-        buffer = ByteBuffer.wrap(clientName.getBytes());
+        buffer = ByteBuffer.wrap("Client".getBytes());
         try {
             clientSocket.write(buffer);
             buffer.clear();

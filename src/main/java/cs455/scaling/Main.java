@@ -18,7 +18,7 @@ public class Main {
                 String serverHostName = args[2];
                 int serverPort = Integer.parseInt(args[3]);
                 int msgRate = Integer.parseInt(args[4]);
-                String clientName = args[5];
+               // String clientName = args[5];
                 Client client = new Client(serverHostName, serverPort, msgRate);
                 //Client client = new Client(serverHostName, serverPort, msgRate);
                 client.connect();
