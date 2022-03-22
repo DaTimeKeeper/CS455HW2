@@ -31,7 +31,7 @@ public class Client {
         clientSocket = SocketChannel.open(new InetSocketAddress(serverHostName, serverPort));
         buffer = ByteBuffer.allocate(256);
 
-        buffer = ByteBuffer.wrap(clientName.getBytes());
+        buffer = ByteBuffer.wrap(("Client: " + clientName).getBytes());
         try {
             clientSocket.write(buffer);
             buffer.clear();
