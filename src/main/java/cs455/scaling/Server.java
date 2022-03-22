@@ -16,6 +16,7 @@ public class Server {
 
     public Server(int port, int poolSize, int batchSize, int batchTime) {
         manager = new ThreadPoolManager(poolSize);
+        manager.begin();
         this.port = port;
     }
 
@@ -27,9 +28,9 @@ public class Server {
         serverSocket.configureBlocking(false);
         //All connections with OP_ACCEPT will be sent to serverSocket
         serverSocket.register(selector, SelectionKey.OP_ACCEPT);
-
+        System.out.printf("Listening for connections on port %d\n", port);
+        
         while (true) {
-            System.out.printf("Listening for connections on port %d\n", port);
             selector.select();
             System.out.println("Activity on selector!");
 
@@ -37,49 +38,59 @@ public class Server {
             Set<SelectionKey> selectedKeys = selector.selectedKeys();
             Iterator<SelectionKey> iter = selectedKeys.iterator();
 
-            while (iter.hasNext()) {
-                SelectionKey key = iter.next();
+            //AcceptConn acceptConn = new AcceptConn(iter, serverSocket, selector);
+           // manager.addTask(acceptConn);
 
-                if (key.isValid() == false) {
-                    continue;
-                }
-
-                //New connection
-                if (key.isAcceptable()) {
-                    register(selector, serverSocket);
-                }
-                //Registered key has data
-                if (key.isReadable()) {
-                    read(key);
-                }
-
-                //Remove key so we don't loop over the same one
-                iter.remove();
-            }
+            // while (iter.hasNext()) {
+            //     SelectionKey key = iter.next();
+    
+            //     if (key.isValid() == false) {
+            //         continue;
+            //     }
+    
+            //     //New connection
+            //     if (key.isAcceptable()) {
+            //         register(selector, serverSocket);
+            //     }
+            //     //Registered key has data
+            //     if (key.isReadable()) {
+            //         read(key);
+            //     }
+    
+            //     //Remove key so we don't loop over the same one
+            //     iter.remove();
+            // }
         }
     }
 
-    private void read(SelectionKey key) throws IOException{
-        ByteBuffer buffer = ByteBuffer.allocate(256);
-        SocketChannel client = (SocketChannel) key.channel();
-        int bytesRead = client.read(buffer);
+    private void read(SelectionKey key) {
+        try {
+            ByteBuffer buffer = ByteBuffer.allocate(256);
+            SocketChannel client = (SocketChannel) key.channel();
+            int bytesRead = client.read(buffer);
 
-        if (bytesRead == -1) {
-            client.close();
-            System.out.println("Client disconnected");
-        }
-        else {
-            System.out.println("Recieved " + new String(buffer.array()));
+            if (bytesRead == -1) {
+                client.close();
+                System.out.println("Client disconnected");
+            }
+            else {
+                System.out.println("Recieved " + new String(buffer.array()));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     //Register channel to OP.READ, will activate key is socket has data
-    private void register(Selector selector, ServerSocketChannel serverSocket) throws IOException{
-        SocketChannel client = serverSocket.accept();
-        client.configureBlocking(false);
-        client.register(selector, SelectionKey.OP_READ);
-        System.out.println("Registered client");
+    private void register(Selector selector, ServerSocketChannel serverSocket) {
+        try {
+            SocketChannel client = serverSocket.accept();
+            client.configureBlocking(false);
+            client.register(selector, SelectionKey.OP_READ);
+            System.out.println("Registered client");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-     
 }
   

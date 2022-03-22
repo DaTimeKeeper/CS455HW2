@@ -29,7 +29,7 @@ public class ThreadPoolManager {
     */
     public void begin() {
         for (int i = 0; i < poolSize; i++) {
-            Worker worker = new Worker(taskQueue);
+            Worker worker = new Worker();
             worker.start();
         }
         System.out.println(Thread.activeCount());
@@ -48,18 +48,13 @@ public class ThreadPoolManager {
         When done with the task it resumes to poll the queue for more
     */
     private class Worker extends Thread {
-        private ConcurrentLinkedQueue<Runnable> taskBlock;
-
-        public Worker(ConcurrentLinkedQueue<Runnable> taskBlock) {
-            this.taskBlock = taskBlock;
-        }
 
         @Override
         public void run() {
             while (true) {
-                if (!taskBlock.isEmpty()) { 
+                if (!taskQueue.isEmpty()) { 
                     Runnable task;
-                    if ((task = taskBlock.poll()) != null) {
+                    if ((task = taskQueue.poll()) != null) {
                         task.run();
                     }
                 }
