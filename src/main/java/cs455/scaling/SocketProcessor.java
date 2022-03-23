@@ -70,23 +70,17 @@ public class SocketProcessor implements Runnable {
             ByteBuffer buffer = ByteBuffer.allocate(8192);
             SocketChannel client = (SocketChannel) key.channel();
             String clientAddress = client.getRemoteAddress().toString();
-            System.out.println("ip addfress:  " + clientAddress);
         
             int bytesRead = client.read(buffer);
 
             if (bytesRead == -1) {
-                client.close();
-                System.out.println("Client disconnected");
+                //client.close();
+                //System.out.println("Client disconnected");
             }
             else {
                 HashProcessor hashProcessorTask = new HashProcessor(clientAddress, client, buffer);
-                //System.out.println("Recieved \'" + new String(buffer.array()) + "\'");
                 manager.addTask(hashProcessorTask);
             }
-
-            //ADD HASHING TASKS TO QUEUE HERE!
-            // Runnable testTask = () -> System.out.println("This is a task!");
-            // manager.addTask(testTask);
         } catch (Exception e) {
             e.printStackTrace();
         }
