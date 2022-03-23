@@ -1,7 +1,9 @@
 package cs455.scaling;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -10,27 +12,39 @@ public class HashProcessor implements Runnable {
 
     String ip;
     SocketChannel client;
-    ByteBuffer message;
+    ByteBuffer msgBuffer;
+    SelectionKey key;
 
-    HashProcessor(String ip, SocketChannel client, ByteBuffer message){
+    HashProcessor(String ip, SocketChannel client, ByteBuffer msgBuffer){
         this.ip = ip;
         this.client =  client;
-        this.message = message;
+        this.msgBuffer = msgBuffer;
+    }
 
-
+    public HashProcessor(SelectionKey key, ByteBuffer msgBuffer) {
+        this.msgBuffer = msgBuffer;
+        this.key = key;
+        this.client = (SocketChannel) key.channel();
     }
 
     @Override
     public void run() {
-        // TODO Auto-generated method stub
         try {
-            String hash = SHA1FromBytes(message.array());
-        
-            System.out.println("Server Hash " + hash  );
+            //Hash the msg
+            String hash = SHA1FromBytes(msgBuffer.array());
+            System.out.println("Server Hash " + hash);
+
+            //Prepare for writing
+            //msgBuffer.flip();
+            msgBuffer = ByteBuffer.wrap(hash.getBytes());
+            client.write(msgBuffer);
+            msgBuffer.clear();
 
 
         } catch (NoSuchAlgorithmException e) {
-            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.out.println("Hasher: Cannot write to buffer");
             e.printStackTrace();
         }
 
@@ -39,8 +53,6 @@ public class HashProcessor implements Runnable {
     }
 
     public String SHA1FromBytes(byte[] data) throws NoSuchAlgorithmException {
-
-        
         MessageDigest digest = MessageDigest.getInstance("SHA1");
         byte[] hash = digest.digest(data);
         BigInteger hashInt = new BigInteger(1, hash);
