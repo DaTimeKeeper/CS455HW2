@@ -7,11 +7,13 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SocketProcessor implements Runnable {
     Selector selector;
     ServerSocketChannel serverSocket;
     ThreadPoolManager manager;
+    AtomicInteger numRec = new AtomicInteger();
 
     public SocketProcessor(Selector selector, ServerSocketChannel serverSocket, ThreadPoolManager manager) {
         this.selector = selector;
@@ -67,18 +69,25 @@ public class SocketProcessor implements Runnable {
 
     private void read(SelectionKey key) {
         try {
-            ByteBuffer buffer = ByteBuffer.allocate(8192);
+            ByteBuffer buffer = ByteBuffer.allocate(4096);
             SocketChannel client = (SocketChannel) key.channel();
             String clientAddress = client.getRemoteAddress().toString();
-        
-            int bytesRead = client.read(buffer);
+            int bytesRead = 0;
+            byte[] msgArray = new byte[8192];
 
-            if (bytesRead == -1) {
-                //client.close();
+            for (int i = 0; i < 2; i++) {
+                bytesRead += client.read(buffer);
+                System.arraycopy(buffer.array(), 0, msgArray, i*4096, 4096);
+            }
+            buffer.clear();
+
+            if (bytesRead == -1 || bytesRead == 0) {
                 //System.out.println("Client disconnected");
             }
             else {
-                HashProcessor hashProcessorTask = new HashProcessor(clientAddress, client, buffer);
+                numRec.incrementAndGet();
+                System.out.println(numRec.get() + " " + bytesRead);
+                HashProcessor hashProcessorTask = new HashProcessor(clientAddress, client, msgArray);
                 manager.addTask(hashProcessorTask);
             }
         } catch (Exception e) {

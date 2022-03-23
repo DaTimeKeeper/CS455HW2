@@ -9,6 +9,7 @@ import java.nio.channels.SocketChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.ArrayList;
 
 public class Client {
@@ -17,6 +18,8 @@ public class Client {
 
     private String serverHostName, clientName;
     private int serverPort, msgRate;
+    private AtomicInteger numSent = new AtomicInteger();
+    private AtomicInteger numRec = new AtomicInteger();
 
     private ArrayList<String> clientHashValue = new ArrayList<String>(); 
   
@@ -53,36 +56,72 @@ public class Client {
         //Connect to server
         clientSocket = SocketChannel.open(new InetSocketAddress(serverHostName, serverPort));
         buffer = ByteBuffer.allocate(8192);
+        ReadHandler readHandler = new ReadHandler(clientSocket);
+        Thread reader = new Thread(readHandler);
+        reader.start();
 
-        for (int i = 0; i < 5; i++) {
-            byte[] payload = GetByteArray(8);
+        for (int i = 0; i < 100; i++) {
             try {
+                byte[] payload = GetByteArray(8);
+
+                //byte[] payload = {1,2,3,4,5,6,7,8};
+
                 String hash = SHA1FromBytes(payload);
                 storeHashValues(hash);
-                System.out.println("Client hash :"+ hash);
+                //System.out.println("Client hash :"+ hash);
 
-            } catch (NoSuchAlgorithmException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
+                numSent.incrementAndGet();
 
-            buffer = ByteBuffer.wrap(payload);
+                buffer = ByteBuffer.wrap(payload);
 
-            try {
-                clientSocket.write(buffer);
+                int writeSize = clientSocket.write(buffer);
+
+                System.out.println(writeSize);
+                
                 buffer.clear();
+
+                
+
+                Thread.sleep(500);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-            ByteBuffer hashBuffer = ByteBuffer.allocate(40);
-            clientSocket.read(hashBuffer);
-            String returnedHash = new String(hashBuffer.array()).trim();
-            if (clientHashValue.contains(returnedHash)) {
-                System.out.println("hash returned correctly");
-            }
         }
 
+        System.out.println(numSent.get() + " " + numRec.get());
+
+        try {
+            reader.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private class ReadHandler implements Runnable {
+        SocketChannel clientSocket;
+
+        ReadHandler(SocketChannel clientSocket) {
+            this.clientSocket = clientSocket;
+        }
+
+        @Override
+        public void run() {
+            while (numRec.get() != numSent.get()) {
+                try {
+                    ByteBuffer hashBuffer = ByteBuffer.allocate(40);
+                    int readSize = clientSocket.read(hashBuffer);
+                    System.out.println(readSize);
+
+                    String returnedHash = new String(hashBuffer.array()).trim();
+                    if (clientHashValue.contains(returnedHash)) {
+                        System.out.println("hash returned correctly");
+                        numRec.incrementAndGet();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } 
+        }
     }
 
     public void storeHashValues(String hashValue) {

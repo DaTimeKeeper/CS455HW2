@@ -12,34 +12,30 @@ public class HashProcessor implements Runnable {
 
     String ip;
     SocketChannel client;
-    ByteBuffer msgBuffer;
+    byte[] msgArray;
     SelectionKey key;
 
-    HashProcessor(String ip, SocketChannel client, ByteBuffer msgBuffer){
+    HashProcessor(String ip, SocketChannel client, byte[] msgArray){
         this.ip = ip;
         this.client =  client;
-        this.msgBuffer = msgBuffer;
-    }
-
-    public HashProcessor(SelectionKey key, ByteBuffer msgBuffer) {
-        this.msgBuffer = msgBuffer;
-        this.key = key;
-        this.client = (SocketChannel) key.channel();
+        this.msgArray = msgArray;
     }
 
     @Override
     public void run() {
         try {
+
+            ByteBuffer msgBuffer = ByteBuffer.allocate(40);
+            
             //Hash the msg
-            String hash = SHA1FromBytes(msgBuffer.array());
-            System.out.println("Server Hash " + hash);
+            String hash = SHA1FromBytes(msgArray);
+            //System.out.println("Server Hash " + hash);
 
             //Prepare for writing
             //msgBuffer.flip();
             msgBuffer = ByteBuffer.wrap(hash.getBytes());
             client.write(msgBuffer);
             msgBuffer.clear();
-
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
