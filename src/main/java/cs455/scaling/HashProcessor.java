@@ -29,10 +29,9 @@ public class HashProcessor implements Runnable {
             
             //Hash the msg
             String hash = SHA1FromBytes(msgArray);
-            //System.out.println("Server Hash " + hash);
+            System.out.println("Server Hash " + hash);
 
             //Prepare for writing
-            //msgBuffer.flip();
             msgBuffer = ByteBuffer.wrap(hash.getBytes());
             client.write(msgBuffer);
             msgBuffer.clear();

@@ -69,6 +69,7 @@ public class Client {
                 String hash = SHA1FromBytes(payload);
                 storeHashValues(hash);
                 //System.out.println("Client hash :"+ hash);
+                System.out.println("W " + hash);
 
                 numSent.incrementAndGet();
 
@@ -76,7 +77,7 @@ public class Client {
 
                 int writeSize = clientSocket.write(buffer);
 
-                System.out.println(writeSize);
+                //System.out.println(writeSize);
                 
                 buffer.clear();
 
@@ -88,13 +89,13 @@ public class Client {
             }
         }
 
-        System.out.println(numSent.get() + " " + numRec.get());
-
         try {
             reader.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        //System.out.println(numSent.get() + " " + numRec.get());
     }
 
     private class ReadHandler implements Runnable {
@@ -106,13 +107,15 @@ public class Client {
 
         @Override
         public void run() {
-            while (numRec.get() != numSent.get()) {
+            //System.out.println("start");
+            while (true) {
                 try {
                     ByteBuffer hashBuffer = ByteBuffer.allocate(40);
                     int readSize = clientSocket.read(hashBuffer);
-                    System.out.println(readSize);
+                    //System.out.println(readSize);
 
                     String returnedHash = new String(hashBuffer.array()).trim();
+                    System.out.println("R " + returnedHash);
                     if (clientHashValue.contains(returnedHash)) {
                         System.out.println("hash returned correctly");
                         numRec.incrementAndGet();
@@ -121,6 +124,8 @@ public class Client {
                     e.printStackTrace();
                 }
             } 
+            //System.out.println("end");
+
         }
     }
 
