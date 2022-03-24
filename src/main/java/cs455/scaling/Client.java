@@ -37,9 +37,9 @@ public class Client {
     }
 
     public String SHA1FromBytes(byte[] data) throws NoSuchAlgorithmException {
-
-        
-        MessageDigest digest = MessageDigest.getInstance("SHA1"); byte[] hash = digest.digest(data);
+        MessageDigest digest = MessageDigest.getInstance("SHA1"); 
+        byte[] hash = digest.digest(data);
+        //System.out.println("Size " + hash.length);
         BigInteger hashInt = new BigInteger(1, hash);
         return hashInt.toString(16); 
     }
@@ -56,6 +56,8 @@ public class Client {
         //Connect to server
         clientSocket = SocketChannel.open(new InetSocketAddress(serverHostName, serverPort));
         buffer = ByteBuffer.allocate(8192);
+        //buffer = ByteBuffer.allocate(8);
+
         ReadHandler readHandler = new ReadHandler(clientSocket);
         Thread reader = new Thread(readHandler);
         reader.start();
@@ -67,15 +69,17 @@ public class Client {
                 //byte[] payload = {1,2,3,4,5,6,7,8};
 
                 String hash = SHA1FromBytes(payload);
+                //System.out.println(hash.length());
                 storeHashValues(hash);
-                //System.out.println("Client hash :"+ hash);
-                System.out.println("W " + hash);
+                //System.out.println(hash);
 
                 numSent.incrementAndGet();
 
                 buffer = ByteBuffer.wrap(payload);
 
-                int writeSize = clientSocket.write(buffer);
+                //while (buffer.hasRemaining()) {
+                    clientSocket.write(buffer);
+                //}
 
                 //System.out.println(writeSize);
                 
@@ -88,14 +92,6 @@ public class Client {
                 e.printStackTrace();
             }
         }
-
-        try {
-            reader.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        //System.out.println(numSent.get() + " " + numRec.get());
     }
 
     private class ReadHandler implements Runnable {
@@ -107,25 +103,31 @@ public class Client {
 
         @Override
         public void run() {
-            //System.out.println("start");
             while (true) {
                 try {
-                    ByteBuffer hashBuffer = ByteBuffer.allocate(40);
-                    int readSize = clientSocket.read(hashBuffer);
-                    //System.out.println(readSize);
+                    int bytesRead = 0;
+                    ByteBuffer hashBuffer = ByteBuffer.allocate(41);
+                    while (buffer.hasRemaining() && bytesRead != -1) {
+                        bytesRead = clientSocket.read(hashBuffer);
+                    }
+                    
 
-                    String returnedHash = new String(hashBuffer.array()).trim();
-                    System.out.println("R " + returnedHash);
-                    if (clientHashValue.contains(returnedHash)) {
-                        System.out.println("hash returned correctly");
+                    String returnedMsg = new String(hashBuffer.array()).trim();
+                    char header = returnedMsg.charAt(0);
+                    System.out.println(header + " " + returnedMsg);
+                    //String hashValue = returnedMsg.substring(1,40-header);
+                    //System.out.println("R " + returnedHash);
+                    if (clientHashValue.contains(returnedMsg)) {
                         numRec.incrementAndGet();
                     }
+                    else {
+                        //System.out.println("Incorrect hash");
+                    }
+                    hashBuffer.clear();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             } 
-            //System.out.println("end");
-
         }
     }
 

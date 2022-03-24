@@ -25,15 +25,23 @@ public class HashProcessor implements Runnable {
     public void run() {
         try {
 
-            ByteBuffer msgBuffer = ByteBuffer.allocate(40);
+            ByteBuffer msgBuffer = ByteBuffer.allocate(41);
             
             //Hash the msg
             String hash = SHA1FromBytes(msgArray);
-            System.out.println("Server Hash " + hash);
+            byte diff = (byte) ((byte)40 - hash.length());
+            String payload = Byte.toString(diff) + hash;
+            System.out.print(payload + " ");
+            payload = pad(payload, diff);
+            System.out.println(payload);
+            //System.out.println("Server Hash " + hash);
+            //System.out.println(hash.length() + " " + hash);
 
             //Prepare for writing
-            msgBuffer = ByteBuffer.wrap(hash.getBytes());
-            client.write(msgBuffer);
+            msgBuffer = ByteBuffer.wrap(payload.getBytes());
+            while (msgBuffer.hasRemaining()) {
+                client.write(msgBuffer);
+            }
             msgBuffer.clear();
 
         } catch (NoSuchAlgorithmException e) {
@@ -47,11 +55,21 @@ public class HashProcessor implements Runnable {
         
     }
 
+    public String pad(String payload, byte diff) {
+        String pad = Byte.toString((byte)0);
+        int padLength = (int) diff;
+        
+        for (int i = 0; i < padLength; i++) {
+            payload.concat(pad);
+        }
+
+        return payload;
+    }
+
     public String SHA1FromBytes(byte[] data) throws NoSuchAlgorithmException {
         MessageDigest digest = MessageDigest.getInstance("SHA1");
         byte[] hash = digest.digest(data);
         BigInteger hashInt = new BigInteger(1, hash);
         return hashInt.toString(16); 
     }
-    
 }
