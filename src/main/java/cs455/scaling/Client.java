@@ -10,6 +10,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.ArrayList;
+import java.util.*;
+import java.sql.Timestamp;
 
 public class Client {
     private static SocketChannel clientSocket;
@@ -26,6 +28,9 @@ public class Client {
         this.serverHostName = serverHostName;
         this.serverPort = serverPort;
         this.msgRate = msgRate;
+        Timer timer = new Timer();
+        PrintClient printTask = new PrintClient(this);
+        timer.scheduleAtFixedRate(printTask, 0L, 20000L);
     }
 
     public String SHA1FromBytes(byte[] data) throws NoSuchAlgorithmException {
@@ -119,5 +124,25 @@ public class Client {
 
     public void storeHashValues(String hashValue) {
         clientHashValue.add(hashValue); 
+    }
+    public String getMessage(){
+        return " Total Sent Count: "+this.numSent+ ", Total Recived Count: "+this.numRec;
+    }
+    public void resetCount(){
+        this.numRec.set(0);
+        this.numSent.set(0);
+    }
+}
+
+class PrintClient extends TimerTask {
+    Client node;
+    PrintClient(Client node){
+        this.node=node;
+    }
+    public void run() {
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        String message = node.getMessage();
+        System.out.println(timestamp+message);
+        node.resetCount();
     }
 }

@@ -8,17 +8,23 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.*;
+import java.sql.Timestamp;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SocketProcessor implements Runnable {
     Selector selector;
     ServerSocketChannel serverSocket;
     ThreadPoolManager manager;
-    AtomicInteger numRec = new AtomicInteger();
+    ConcurrentHashMap<String,AtomicInteger> hm = new ConcurrentHashMap<String,AtomicInteger>();
 
     public SocketProcessor(Selector selector, ServerSocketChannel serverSocket, ThreadPoolManager manager) {
         this.selector = selector;
         this.serverSocket = serverSocket;
         this.manager = manager;
+        Timer timer = new Timer();
+        PrintServer printTask = new PrintServer(this);
+        timer.scheduleAtFixedRate(printTask, 0L, 20000L);
     }
 
     @Override
@@ -62,6 +68,7 @@ public class SocketProcessor implements Runnable {
             client.configureBlocking(false);
             client.register(selector, SelectionKey.OP_READ);
             System.out.println("Registered client");
+            this.hm.putIfAbsent(client.getRemoteAddress().toString(), new AtomicInteger(0));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -89,8 +96,10 @@ public class SocketProcessor implements Runnable {
                 client.close();
             }
             else {
-                numRec.incrementAndGet();
-                //System.out.println(" " + numRec.get() + " " + bytesRead + " " + msgArray.length);
+
+                hm.get(clientAddress).incrementAndGet();
+                System.out.print(" " + hm.get(clientAddress).get() + " " + bytesRead + " " + msgArray.length);
+
                 HashProcessor hashProcessorTask = new HashProcessor(clientAddress, client, msgArray);
                 manager.addTask(hashProcessorTask);
             }
@@ -98,5 +107,46 @@ public class SocketProcessor implements Runnable {
             e.printStackTrace();
         }
     }
-
+    public String getMessage(){
+        double x=0;
+        int y=hm.size();
+        double p=0;
+        double q=0;
+        for(Map.Entry mapElement : hm.entrySet()){
+            AtomicInteger temp = (AtomicInteger)mapElement.getValue();
+            x+=temp.get();
+        }
+        x=x/20;
+        if(y>0){
+            p=x/y;
+        }
+        for(Map.Entry mapElement : hm.entrySet()){
+            AtomicInteger temp = (AtomicInteger)mapElement.getValue();
+            q+=Math.pow((temp.get()/20/y-p),2);
+        }
+        if(y>0){
+            q=q/y;
+        }
+        q=Math.sqrt(q);
+        return "Server Throughput: "+x+" messages/s, Active Client Connections: "+y+
+        ", Mean Per-client Throughput: "+p+" messages/s, Std. Dev. Of Per-client Throughput: "+q+" messages/s";
+    }
+    public void resetCount(){
+        for(Map.Entry mapElement : hm.entrySet()){
+            String temp = (String)mapElement.getKey();
+            hm.get(temp).set(0);
+        }
+    }
+}
+class PrintServer extends TimerTask {
+    SocketProcessor node;
+    PrintServer(SocketProcessor node){
+        this.node=node;
+    }
+    public void run() {
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        String message = node.getMessage();
+        System.out.println(timestamp+message);
+        node.resetCount();
+    }
 }
