@@ -34,9 +34,9 @@ public class HashProcessor implements Runnable {
             //Add diff header to denote hash length
             String payload = Byte.toString(diff) + hash;
             //Pad to length of 40
-            System.out.println(payload);
+            //System.out.println(payload);
             payload = pad(payload, diff);
-            System.out.println(payload + '\n');
+            //System.out.println(payload + '\n');
             //System.out.println("Server Hash " + hash);
             //System.out.println(hash.length() + " " + hash);
 

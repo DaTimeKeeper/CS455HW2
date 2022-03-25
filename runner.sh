@@ -4,7 +4,7 @@
 USERNAME=ewest01
 
 # can add any number of 120 machines to scale your solution
-NODE_HOSTS="cheyenne.cs.colostate.edu honolulu.cs.colostate.edu"
+NODE_HOSTS="cheyenne.cs.colostate.edu cheyenne.cs.colostate.edu"
 # the port and ip of the registry
 # Note: this assumes that the registry is already running before the script is run. 
 REGISTRY_HOST="loveland.cs.colostate.edu"

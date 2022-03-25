@@ -57,7 +57,7 @@ public class Client {
         Thread reader = new Thread(readHandler);
         reader.start();
 
-        for (int i = 0; i < 100; i++) {
+        while(true) {
             try {
                 byte[] payload = GetByteArray(8);
 
@@ -65,7 +65,7 @@ public class Client {
                 storeHashValues(hash);
                 numSent.incrementAndGet();
 
-                System.out.println("W " + hash);
+                //System.out.println("W " + hash);
 
                 //Put raw array into buffer and send
                 buffer = ByteBuffer.wrap(payload);
@@ -80,6 +80,30 @@ public class Client {
                 e.printStackTrace();
             }
         }
+
+        // for (int i = 0; i < 100; i++) {
+        //     try {
+        //         byte[] payload = GetByteArray(8);
+
+        //         String hash = SHA1FromBytes(payload);
+        //         storeHashValues(hash);
+        //         numSent.incrementAndGet();
+
+        //         System.out.println("W " + hash);
+
+        //         //Put raw array into buffer and send
+        //         buffer = ByteBuffer.wrap(payload);
+        //         while (buffer.hasRemaining()) {
+        //             clientSocket.write(buffer);
+        //         }
+                
+        //         buffer.clear();
+        //         //Message Send Rate
+        //         Thread.sleep(500);
+        //     } catch (Exception e) {
+        //         e.printStackTrace();
+        //     }
+        // }
     }
 
     private class ReadHandler implements Runnable {
@@ -109,10 +133,11 @@ public class Client {
                     numRec.incrementAndGet();
 
                     if (clientHashValue.contains(hashValue)) {
-                        System.out.println(numRec.get() + " " + hashValue);                       
+                        //System.out.println(numRec.get() + " " + hashValue);
+                        clientHashValue.remove(hashValue);                       
                     }
                     else {
-                        System.out.println(numRec.get() + " " + hashValue + " &");
+                        System.out.println("INCORRECT HASH: " + hashValue);
                     }
                     hashBuffer.clear();
                 } catch (Exception e) {

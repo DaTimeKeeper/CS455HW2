@@ -86,7 +86,6 @@ public class SocketProcessor implements Runnable {
 
             while (buffer.hasRemaining() && bytesRead != -1) {
                 bytesRead += client.read(buffer);    
-                //System.out.print(buffer.position());
             }
             msgArray = buffer.array();
             buffer.clear();
@@ -98,7 +97,7 @@ public class SocketProcessor implements Runnable {
             else {
 
                 hm.get(clientAddress).incrementAndGet();
-                System.out.print(" " + hm.get(clientAddress).get() + " " + bytesRead + " " + msgArray.length);
+                //System.out.print(" " + hm.get(clientAddress).get() + " " + bytesRead + " " + msgArray.length);
 
                 HashProcessor hashProcessorTask = new HashProcessor(clientAddress, client, msgArray);
                 manager.addTask(hashProcessorTask);
@@ -146,7 +145,7 @@ class PrintServer extends TimerTask {
     public void run() {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         String message = node.getMessage();
-        System.out.println(timestamp+message);
+        System.out.println(timestamp + " " + message);
         node.resetCount();
     }
 }
