@@ -35,36 +35,5 @@ public class Server {
         
         
     }
-
-    private void read(SelectionKey key) {
-        try {
-            ByteBuffer buffer = ByteBuffer.allocate(256);
-            SocketChannel client = (SocketChannel) key.channel();
-            int bytesRead = client.read(buffer);
-
-            if (bytesRead == -1) {
-                client.close();
-                System.out.println("Client disconnected");
-            }
-            else {
-                System.out.println("Recieved: " + new String(buffer.array()));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    //Register channel to OP.READ, will activate key is socket has data
-    private void register(Selector selector, ServerSocketChannel serverSocket) {
-        try {
-            SocketChannel client = serverSocket.accept();
-            client.configureBlocking(false);
-            client.register(selector, SelectionKey.OP_READ);
-            System.out.println("Registered client " + selector.selectedKeys().size());
-            Thread.sleep(5000);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }
   

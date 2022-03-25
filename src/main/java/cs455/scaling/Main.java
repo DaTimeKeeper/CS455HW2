@@ -30,7 +30,7 @@ public class Main {
                 System.out.println("Error: Incorrect args\n Use 'server [portnum] [thread-pool-size] [batch-size] [batch-time]' or 'client [server-host] [server-port] [message-rate]'");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error: Incorrect args\n Use 'server [portnum] [thread-pool-size] [batch-size] [batch-time]' or 'client [server-host] [server-port] [message-rate]'");
         }
     }
 }

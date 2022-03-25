@@ -7,11 +7,13 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SocketProcessor implements Runnable {
     Selector selector;
     ServerSocketChannel serverSocket;
     ThreadPoolManager manager;
+    AtomicInteger numRec = new AtomicInteger();
 
     public SocketProcessor(Selector selector, ServerSocketChannel serverSocket, ThreadPoolManager manager) {
         this.selector = selector;
@@ -67,18 +69,29 @@ public class SocketProcessor implements Runnable {
 
     private void read(SelectionKey key) {
         try {
+            //ByteBuffer buffer = ByteBuffer.allocate(8);
             ByteBuffer buffer = ByteBuffer.allocate(8192);
             SocketChannel client = (SocketChannel) key.channel();
             String clientAddress = client.getRemoteAddress().toString();
-        
-            int bytesRead = client.read(buffer);
+            int bytesRead = 0;
+            byte[] msgArray = new byte[8192];
+            //byte[] msgArray = new byte[8];
 
-            if (bytesRead == -1) {
-                //client.close();
-                //System.out.println("Client disconnected");
+            while (buffer.hasRemaining() && bytesRead != -1) {
+                bytesRead += client.read(buffer);    
+                //System.out.print(buffer.position());
+            }
+            msgArray = buffer.array();
+            buffer.clear();
+
+            if (bytesRead == -1 || bytesRead == 0) {
+                System.out.println("Client disconnected");
+                client.close();
             }
             else {
-                HashProcessor hashProcessorTask = new HashProcessor(clientAddress, client, buffer);
+                numRec.incrementAndGet();
+                //System.out.println(" " + numRec.get() + " " + bytesRead + " " + msgArray.length);
+                HashProcessor hashProcessorTask = new HashProcessor(clientAddress, client, msgArray);
                 manager.addTask(hashProcessorTask);
             }
         } catch (Exception e) {

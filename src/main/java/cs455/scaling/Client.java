@@ -8,6 +8,7 @@ import java.nio.channels.SocketChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.ArrayList;
 
 public class Client {
@@ -16,6 +17,8 @@ public class Client {
 
     private String serverHostName, clientName;
     private int serverPort, msgRate;
+    private AtomicInteger numSent = new AtomicInteger();
+    private AtomicInteger numRec = new AtomicInteger();
 
     private ArrayList<String> clientHashValue = new ArrayList<String>(); 
   
@@ -24,18 +27,10 @@ public class Client {
         this.serverPort = serverPort;
         this.msgRate = msgRate;
     }
-      
-    public Client(String serverHostName, int serverPort, int msgRate, String clientName) {
-        this.serverHostName = serverHostName;
-        this.serverPort = serverPort;
-        this.msgRate = msgRate;
-        //this.clientName = clientName;
-    }
 
     public String SHA1FromBytes(byte[] data) throws NoSuchAlgorithmException {
-
-        
-        MessageDigest digest = MessageDigest.getInstance("SHA1"); byte[] hash = digest.digest(data);
+        MessageDigest digest = MessageDigest.getInstance("SHA1"); 
+        byte[] hash = digest.digest(data);
         BigInteger hashInt = new BigInteger(1, hash);
         return hashInt.toString(16); 
     }
@@ -53,35 +48,73 @@ public class Client {
         clientSocket = SocketChannel.open(new InetSocketAddress(serverHostName, serverPort));
         buffer = ByteBuffer.allocate(8192);
 
-        for (int i = 0; i < 5; i++) {
-            byte[] payload = GetByteArray(8);
+        ReadHandler readHandler = new ReadHandler(clientSocket);
+        Thread reader = new Thread(readHandler);
+        reader.start();
+
+        for (int i = 0; i < 100; i++) {
             try {
+                byte[] payload = GetByteArray(8);
+
                 String hash = SHA1FromBytes(payload);
                 storeHashValues(hash);
-                System.out.println("Client hash :"+ hash);
+                numSent.incrementAndGet();
 
-            } catch (NoSuchAlgorithmException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
+                System.out.println("W " + hash);
 
-            buffer = ByteBuffer.wrap(payload);
-
-            try {
-                clientSocket.write(buffer);
+                //Put raw array into buffer and send
+                buffer = ByteBuffer.wrap(payload);
+                while (buffer.hasRemaining()) {
+                    clientSocket.write(buffer);
+                }
+                
                 buffer.clear();
+                //Message Send Rate
+                Thread.sleep(500);
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
 
-            ByteBuffer hashBuffer = ByteBuffer.allocate(40);
-            clientSocket.read(hashBuffer);
-            String returnedHash = new String(hashBuffer.array()).trim();
-            if (clientHashValue.contains(returnedHash)) {
-                System.out.println("hash returned correctly");
-            }
+    private class ReadHandler implements Runnable {
+        SocketChannel clientSocket;
+
+        ReadHandler(SocketChannel clientSocket) {
+            this.clientSocket = clientSocket;
         }
 
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    int bytesRead = 0;
+                    //1 byte size header + 40 bytes hash string
+                    ByteBuffer hashBuffer = ByteBuffer.allocate(41);
+                    while (buffer.hasRemaining() && bytesRead != -1) {
+                        bytesRead = clientSocket.read(hashBuffer);
+                    }
+
+                    //Get the full payload as a string
+                    String returnedMsg = new String(hashBuffer.array()).trim();
+                    //Get the header val
+                    int header = returnedMsg.charAt(0) - '0';
+                    //Get the actual hash string, ignore padding
+                    String hashValue = returnedMsg.substring(1,41-header);
+                    numRec.incrementAndGet();
+
+                    if (clientHashValue.contains(hashValue)) {
+                        System.out.println(numRec.get() + " " + hashValue);                       
+                    }
+                    else {
+                        System.out.println(numRec.get() + " " + hashValue + " &");
+                    }
+                    hashBuffer.clear();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } 
+        }
     }
 
     public void storeHashValues(String hashValue) {

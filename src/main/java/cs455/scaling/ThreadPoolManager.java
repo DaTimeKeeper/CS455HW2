@@ -1,6 +1,7 @@
 package cs455.scaling;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /*
     The ThreadPoolManager maintains a ConcurrentLinkedQueue of runnable tasks. 
@@ -13,6 +14,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class ThreadPoolManager {
     private int poolSize;
     private ConcurrentLinkedQueue<Runnable> taskQueue;
+    private AtomicInteger numTasksRan = new AtomicInteger();
     
     ThreadPoolManager(int poolSize) {
         this.poolSize = poolSize;
@@ -32,7 +34,8 @@ public class ThreadPoolManager {
             Worker worker = new Worker();
             worker.start();
         }
-        System.out.println("Num threads running:" + Thread.activeCount());
+        int count = Thread.activeCount() - 1;
+        System.out.println("Num threads running:" + count);
     }
 
     public void printTasks() {
@@ -53,10 +56,10 @@ public class ThreadPoolManager {
         public void run() {
             while (true) {
                 if (!taskQueue.isEmpty()) {
-                    Runnable task = taskQueue.poll();
-                    if ((task ) != null) {
-                        System.out.print(currentThread().getName() + ": ");
-                        task.run();
+                        Runnable task = taskQueue.poll();
+                        if ((task ) != null) {
+                            //System.out.print(currentThread().getName() + ": ");
+                            task.run();
                     }
                 }
             }
