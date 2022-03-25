@@ -53,7 +53,7 @@ public class Client {
         Thread reader = new Thread(readHandler);
         reader.start();
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 100; i++) {
             try {
                 byte[] payload = GetByteArray(8);
 
@@ -98,18 +98,17 @@ public class Client {
 
                     //Get the full payload as a string
                     String returnedMsg = new String(hashBuffer.array()).trim();
+                    //Get the header val
                     int header = returnedMsg.charAt(0) - '0';
-                    
+                    //Get the actual hash string, ignore padding
                     String hashValue = returnedMsg.substring(1,41-header);
-                    System.out.println(header + hashValue);
-                    System.out.println(returnedMsg);
+                    numRec.incrementAndGet();
 
-                    if (clientHashValue.contains(returnedMsg)) {
-                        System.out.println("R " + hashValue);
-                        numRec.incrementAndGet();
+                    if (clientHashValue.contains(hashValue)) {
+                        System.out.println(numRec.get() + " " + hashValue);                       
                     }
                     else {
-                        System.out.println("R " + hashValue + " &");
+                        System.out.println(numRec.get() + " " + hashValue + " &");
                     }
                     hashBuffer.clear();
                 } catch (Exception e) {
