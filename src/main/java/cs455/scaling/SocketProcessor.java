@@ -76,28 +76,30 @@ public class SocketProcessor implements Runnable {
 
     private void read(SelectionKey key) {
         try {
-            //ByteBuffer buffer = ByteBuffer.allocate(4096);
+            //ByteBuffer buffer = ByteBuffer.allocate(8);
             ByteBuffer buffer = ByteBuffer.allocate(8192);
             SocketChannel client = (SocketChannel) key.channel();
             String clientAddress = client.getRemoteAddress().toString();
             int bytesRead = 0;
             byte[] msgArray = new byte[8192];
+            //byte[] msgArray = new byte[8];
 
-            if (!client.isOpen()) {
-                System.out.println("Closed");
+            while (buffer.hasRemaining() && bytesRead != -1) {
+                bytesRead += client.read(buffer);    
+                //System.out.print(buffer.position());
             }
-
-            bytesRead = client.read(buffer);
             msgArray = buffer.array();
             buffer.clear();
 
             if (bytesRead == -1 || bytesRead == 0) {
-                //System.out.println("Client disconnected");
+                System.out.println("Client disconnected");
                 client.close();
             }
             else {
+
                 hm.get(clientAddress).incrementAndGet();
                 System.out.print(" " + hm.get(clientAddress).get() + " " + bytesRead + " " + msgArray.length);
+
                 HashProcessor hashProcessorTask = new HashProcessor(clientAddress, client, msgArray);
                 manager.addTask(hashProcessorTask);
             }

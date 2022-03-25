@@ -58,7 +58,7 @@ public class ThreadPoolManager {
                 if (!taskQueue.isEmpty()) {
                         Runnable task = taskQueue.poll();
                         if ((task ) != null) {
-                            System.out.print(currentThread().getName() + ": ");
+                            //System.out.print(currentThread().getName() + ": ");
                             task.run();
                     }
                 }
