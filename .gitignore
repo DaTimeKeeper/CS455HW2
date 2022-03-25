@@ -1,6 +1,7 @@
 .gradle/
 bin/
 build/
+.vscode/
 *.bin
 *.lock
 *.class
