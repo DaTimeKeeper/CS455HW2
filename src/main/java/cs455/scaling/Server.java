@@ -2,21 +2,18 @@ package cs455.scaling;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.Iterator;
-import java.util.Set;
 
 public class Server {
     private int port;
     private ThreadPoolManager manager;
 
     public Server(int port, int poolSize, int batchSize, int batchTime) {
-        manager = new ThreadPoolManager(poolSize);
-        manager.begin();
+        manager = new ThreadPoolManager(poolSize, batchSize);
+        Thread threadPool = new Thread(manager, "ThreadPool");
+        threadPool.start();
         this.port = port;
     }
 

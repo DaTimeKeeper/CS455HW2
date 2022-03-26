@@ -3,6 +3,7 @@ package cs455.scaling;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.security.MessageDigest;
@@ -16,19 +17,20 @@ import java.sql.Timestamp;
 public class Client {
     private static SocketChannel clientSocket;
     private static ByteBuffer buffer;
+    private Timer timer;
 
-    private String serverHostName, clientName;
+    private String serverHostName;
     private int serverPort, msgRate;
     private AtomicInteger numSent = new AtomicInteger();
     private AtomicInteger numRec = new AtomicInteger();
 
-    private ArrayList<String> clientHashValue = new ArrayList<String>(); 
+    private LinkedList<String> clientHashValue = new LinkedList<String>(); 
   
     public Client(String serverHostName, int serverPort, int msgRate) {
         this.serverHostName = serverHostName;
         this.serverPort = serverPort;
-        this.msgRate = msgRate;
-        Timer timer = new Timer();
+        this.msgRate = 1000/msgRate;
+        timer = new Timer();
         PrintClient printTask = new PrintClient(this);
         timer.scheduleAtFixedRate(printTask, 0L, 20000L);
     }
@@ -57,15 +59,13 @@ public class Client {
         Thread reader = new Thread(readHandler);
         reader.start();
 
-        for (int i = 0; i < 100; i++) {
+        while(true) {
             try {
                 byte[] payload = GetByteArray(8);
 
                 String hash = SHA1FromBytes(payload);
                 storeHashValues(hash);
                 numSent.incrementAndGet();
-
-                System.out.println("W " + hash);
 
                 //Put raw array into buffer and send
                 buffer = ByteBuffer.wrap(payload);
@@ -75,11 +75,38 @@ public class Client {
                 
                 buffer.clear();
                 //Message Send Rate
-                Thread.sleep(500);
+                Thread.sleep(msgRate);
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("Server connection error, stopping client");
+                timer.cancel();
+                clientSocket.close();    
+                return;
             }
         }
+
+        // for (int i = 0; i < 100; i++) {
+        //     try {
+        //         byte[] payload = GetByteArray(8);
+
+        //         String hash = SHA1FromBytes(payload);
+        //         storeHashValues(hash);
+        //         numSent.incrementAndGet();
+
+        //         System.out.println("W " + hash);
+
+        //         //Put raw array into buffer and send
+        //         buffer = ByteBuffer.wrap(payload);
+        //         while (buffer.hasRemaining()) {
+        //             clientSocket.write(buffer);
+        //         }
+                
+        //         buffer.clear();
+        //         //Message Send Rate
+        //         Thread.sleep(500);
+        //     } catch (Exception e) {
+        //         e.printStackTrace();
+        //     }
+        // }
     }
 
     private class ReadHandler implements Runnable {
@@ -94,29 +121,40 @@ public class Client {
             while (true) {
                 try {
                     int bytesRead = 0;
+                    int header;
+                    String hashValue = "";
                     //1 byte size header + 40 bytes hash string
                     ByteBuffer hashBuffer = ByteBuffer.allocate(41);
                     while (buffer.hasRemaining() && bytesRead != -1) {
                         bytesRead = clientSocket.read(hashBuffer);
                     }
+                    hashBuffer.clear();
 
                     //Get the full payload as a string
                     String returnedMsg = new String(hashBuffer.array()).trim();
-                    //Get the header val
-                    int header = returnedMsg.charAt(0) - '0';
+                    //Ignore an empty payload
+                    if (returnedMsg.isEmpty()) {continue;}                   
+                    //Get the padding amount from the header
+                    header = returnedMsg.charAt(0) - '0';
                     //Get the actual hash string, ignore padding
-                    String hashValue = returnedMsg.substring(1,41-header);
-                    numRec.incrementAndGet();
-
+                    hashValue = returnedMsg.substring(1,41-header);
+                    
+                    //If the hash matches, increment counter and remove from LL
                     if (clientHashValue.contains(hashValue)) {
-                        System.out.println(numRec.get() + " " + hashValue);                       
+                        numRec.incrementAndGet();
+                        clientHashValue.remove(hashValue);                       
                     }
                     else {
-                        System.out.println(numRec.get() + " " + hashValue + " &");
+                        System.out.println("INCORRECT HASH: " + hashValue);
                     }
-                    hashBuffer.clear();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.err.println("Error reading: " + e.getMessage());
+                    try {
+                        clientSocket.close();
+                        break;
+                    } catch (Exception e1) {
+                        System.err.println("Error closing socket: " + e1.getMessage());
+                    }
                 }
             } 
         }

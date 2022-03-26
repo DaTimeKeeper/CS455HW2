@@ -31,14 +31,10 @@ public class HashProcessor implements Runnable {
             String hash = SHA1FromBytes(msgArray);
 
             byte diff = (byte) ((byte)40 - hash.length());
-            //Add diff header to denote hash length
+            //Add padding amt as a header
             String payload = Byte.toString(diff) + hash;
             //Pad to length of 40
-            System.out.println(payload);
             payload = pad(payload, diff);
-            System.out.println(payload + '\n');
-            //System.out.println("Server Hash " + hash);
-            //System.out.println(hash.length() + " " + hash);
 
             //Prepare for writing
             msgBuffer = ByteBuffer.wrap(payload.getBytes());
@@ -58,6 +54,7 @@ public class HashProcessor implements Runnable {
         
     }
 
+    //Right pad with 0 to length 40
     public String pad(String payload, byte diff) {
         String pad = Byte.toString((byte)0);
         int padLength = (int) diff;
