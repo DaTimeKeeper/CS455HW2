@@ -94,6 +94,7 @@ public class SocketProcessor implements Runnable {
                 client.close();
             }
             else {
+                //Increment counter if read successful
                 hm.get(clientAddress).incrementAndGet();
 
                 //HashProcessor hashProcessorTask = new HashProcessor(clientAddress, client, msgArray);
@@ -103,6 +104,7 @@ public class SocketProcessor implements Runnable {
             System.err.println("Read error: " + e.getMessage());
         }
     }
+
     public String getMessage(){
         DecimalFormat decFormat = new DecimalFormat("0.0##");
         double x=0;
@@ -119,7 +121,9 @@ public class SocketProcessor implements Runnable {
         }
         for(Map.Entry mapElement : hm.entrySet()){
             AtomicInteger temp = (AtomicInteger)mapElement.getValue();
-            q+=Math.pow((temp.get()/20/y-p),2);
+            //diff = (client avg over 20s) - (average of all clients)
+            double diff = (temp.get()/20) - p;
+            q+=Math.pow(diff,2);
         }
         if(y>0){
             q=q/y;

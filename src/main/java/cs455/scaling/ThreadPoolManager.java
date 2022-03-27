@@ -52,8 +52,8 @@ public class ThreadPoolManager implements Runnable{
             Worker worker = new Worker();
             worker.start();
         }
-        //Ignore main thread
-        int count = Thread.activeCount() - 1;
+        //Ignore main thread + stat printers
+        int count = Thread.activeCount() - 3;
         System.out.println("Num threads running:" + count);
     }
 
