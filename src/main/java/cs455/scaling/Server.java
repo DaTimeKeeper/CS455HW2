@@ -11,7 +11,7 @@ public class Server {
     private ThreadPoolManager manager;
 
     public Server(int port, int poolSize, int batchSize, int batchTime) {
-        manager = new ThreadPoolManager(poolSize, batchSize);
+        manager = new ThreadPoolManager(poolSize, batchSize, batchTime);
         Thread threadPool = new Thread(manager, "ThreadPool");
         threadPool.start();
         this.port = port;
