@@ -68,7 +68,7 @@ public class SocketProcessor implements Runnable {
             SocketChannel client = serverSocket.accept();
             client.configureBlocking(false);
             client.register(selector, SelectionKey.OP_READ);
-            System.out.println("Registered client\n");
+            System.out.println("Registered client");
             this.hm.putIfAbsent(client.getRemoteAddress().toString(), new AtomicInteger(0));
         } catch (Exception e) {
             System.err.println("Register error: " + e.getMessage());
@@ -96,7 +96,6 @@ public class SocketProcessor implements Runnable {
             else {
                 hm.get(clientAddress).incrementAndGet();
 
-                
                 //HashProcessor hashProcessorTask = new HashProcessor(clientAddress, client, msgArray);
                 manager.addHash(new Message(client, msgArray));
             }

@@ -29,11 +29,10 @@ public class ThreadPoolManager implements Runnable{
     @Override
     public void run() {
         startPool();
-        ArrayList<Message> messages = new ArrayList<>();
         
         while(true) {           
             if (batchReady()) {
-                System.out.println("batching!");
+                ArrayList<Message> messages = new ArrayList<>();
                 hashBatch.drainTo(messages, batchSize);
                 addTask(new HashProcessor(messages));
             }
@@ -90,10 +89,11 @@ public class ThreadPoolManager implements Runnable{
     }
 
     public void addHash(Message hashTask) throws InterruptedException {
-        hashBatch.offer(hashTask, 250, TimeUnit.MILLISECONDS);
+        hashBatch.offer(hashTask, 5, TimeUnit.SECONDS);
+        //System.out.println(hashBatch.remainingCapacity() + " " + hashBatch.size() + " " + batchSize);
     }
 
     public boolean batchReady() {
-        return (hashBatch.size() == batchSize);
+        return (hashBatch.size() >= batchSize);
     }
 }
