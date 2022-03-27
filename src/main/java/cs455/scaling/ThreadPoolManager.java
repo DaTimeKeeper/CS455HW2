@@ -40,11 +40,14 @@ public class ThreadPoolManager implements Runnable{
             
             if (batchReady() || hasPassedBatchTime(start)) {
                 ArrayList<Message> messages = new ArrayList<>();
-                hashBatch.drainTo(messages, batchSize);
+                if(!hashBatch.isEmpty()){
+                    hashBatch.drainTo(messages, batchSize);
+                    addTask(new HashProcessor(messages));
+                    start = System.currentTimeMillis();
+                    //System.out.println( "start " + start  + " batch time " + (long)(batchTime *1000));
 
+                }
                 
-                addTask(new HashProcessor(messages));
-                start = System.currentTimeMillis();
 
             }
         }
@@ -54,11 +57,12 @@ public class ThreadPoolManager implements Runnable{
      boolean isPassed = false;
 
      long  passed = System.currentTimeMillis() - start;
-     if(passed >= (long )(batchSize * 1000) ){
+     //System.out.println(" Time passed" + passed);
+     if(passed >= (long )(batchTime * 1000) ){
          isPassed = true;
-         System.out.println(" ****Batch Time Passed****");
+         System.out.println("Batch Time Passed");
      }
-     System.out.println( "*****HasPassed" + isPassed);
+     
     return  isPassed;
    }
 
