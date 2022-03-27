@@ -1,5 +1,6 @@
 package cs455.scaling;
 
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -16,23 +17,25 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ThreadPoolManager implements Runnable{
     private int poolSize, batchSize;
     private ConcurrentLinkedQueue<Runnable> taskQueue;
-    private LinkedBlockingQueue<Runnable> hashBatch;
+    private LinkedBlockingQueue<Message> hashBatch;
     
     ThreadPoolManager(int poolSize, int batchSize) {
         this.poolSize = poolSize;
         this.taskQueue = new ConcurrentLinkedQueue<>();
-        this.hashBatch = new LinkedBlockingQueue<>(batchSize);
+        this.hashBatch = new LinkedBlockingQueue<>(batchSize * 2);
         this.batchSize = batchSize;
     }
 
     @Override
     public void run() {
         startPool();
-
-        while(true) {            
+        ArrayList<Message> messages = new ArrayList<>();
+        
+        while(true) {           
             if (batchReady()) {
                 System.out.println("batching!");
-                hashBatch.drainTo(taskQueue);
+                hashBatch.drainTo(messages, batchSize);
+                addTask(new HashProcessor(messages));
             }
         }
     }
@@ -86,7 +89,7 @@ public class ThreadPoolManager implements Runnable{
         taskQueue.add(task);
     }
 
-    public void addHash(Runnable hashTask) throws InterruptedException {
+    public void addHash(Message hashTask) throws InterruptedException {
         hashBatch.offer(hashTask, 250, TimeUnit.MILLISECONDS);
     }
 

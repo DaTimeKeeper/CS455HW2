@@ -97,8 +97,8 @@ public class SocketProcessor implements Runnable {
                 hm.get(clientAddress).incrementAndGet();
 
                 
-                HashProcessor hashProcessorTask = new HashProcessor(clientAddress, client, msgArray);
-                manager.addHash(hashProcessorTask);
+                //HashProcessor hashProcessorTask = new HashProcessor(clientAddress, client, msgArray);
+                manager.addHash(new Message(client, msgArray));
             }
         } catch (Exception e) {
             System.err.println("Read error: " + e.getMessage());
