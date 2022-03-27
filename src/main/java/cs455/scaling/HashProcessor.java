@@ -10,16 +10,7 @@ import java.util.ArrayList;
 
 public class HashProcessor implements Runnable {
 
-    // String ip;
-    // SocketChannel client;
-    // byte[] msgArray;
     ArrayList<Message> messages;
-
-    // HashProcessor(String ip, SocketChannel client, byte[] msgArray){
-    //     this.ip = ip;
-    //     this.client =  client;
-    //     this.msgArray = msgArray;
-    // }
 
     HashProcessor (ArrayList<Message> messages) {
         this.messages = messages; 
