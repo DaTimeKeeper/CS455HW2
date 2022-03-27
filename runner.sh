@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-USERNAME=ewest01
+USERNAME=rakibul
 
 # can add any number of 120 machines to scale your solution
 NODE_HOSTS="cheyenne.cs.colostate.edu honolulu.cs.colostate.edu"
