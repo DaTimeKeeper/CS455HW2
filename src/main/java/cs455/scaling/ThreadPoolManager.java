@@ -1,6 +1,9 @@
 package cs455.scaling;
 
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /*
@@ -11,14 +14,29 @@ import java.util.concurrent.atomic.AtomicInteger;
     During initilization, it will create a set amount of worker threads that constantly check
     the thread safe queue for tasks to do and return to polling once they finish a task
 */
-public class ThreadPoolManager {
-    private int poolSize;
+public class ThreadPoolManager implements Runnable{
+    private int poolSize, batchSize;
     private ConcurrentLinkedQueue<Runnable> taskQueue;
-    private AtomicInteger numTasksRan = new AtomicInteger();
+    private LinkedBlockingQueue<Message> hashBatch;
     
-    ThreadPoolManager(int poolSize) {
+    ThreadPoolManager(int poolSize, int batchSize) {
         this.poolSize = poolSize;
-        taskQueue = new ConcurrentLinkedQueue<>();
+        this.taskQueue = new ConcurrentLinkedQueue<>();
+        this.hashBatch = new LinkedBlockingQueue<>(batchSize * 2);
+        this.batchSize = batchSize;
+    }
+
+    @Override
+    public void run() {
+        startPool();
+        
+        while(true) {           
+            if (batchReady()) {
+                ArrayList<Message> messages = new ArrayList<>();
+                hashBatch.drainTo(messages, batchSize);
+                addTask(new HashProcessor(messages));
+            }
+        }
     }
 
     /*
@@ -29,12 +47,13 @@ public class ThreadPoolManager {
 
         start() can only be called once, else it throws an exception. This means each worker thread can only be created once
     */
-    public void begin() {
+    public void startPool() {
         for (int i = 0; i < poolSize; i++) {
             Worker worker = new Worker();
             worker.start();
         }
-        int count = Thread.activeCount() - 1;
+        //Ignore main thread + stat printers
+        int count = Thread.activeCount() - 3;
         System.out.println("Num threads running:" + count);
     }
 
@@ -58,7 +77,6 @@ public class ThreadPoolManager {
                 if (!taskQueue.isEmpty()) {
                         Runnable task = taskQueue.poll();
                         if ((task ) != null) {
-                            //System.out.print(currentThread().getName() + ": ");
                             task.run();
                     }
                 }
@@ -70,9 +88,12 @@ public class ThreadPoolManager {
         taskQueue.add(task);
     }
 
-    //For testing thread pool by itself
-    //Not acutally gonna use this
-    public static void main(String[] args) {
-        ThreadPoolManager poolManager = new ThreadPoolManager(Integer.parseInt(args[0]));
+    public void addHash(Message hashTask) throws InterruptedException {
+        hashBatch.offer(hashTask, 5, TimeUnit.SECONDS);
+        //System.out.println(hashBatch.remainingCapacity() + " " + hashBatch.size() + " " + batchSize);
+    }
+
+    public boolean batchReady() {
+        return (hashBatch.size() >= batchSize);
     }
 }
