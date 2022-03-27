@@ -3,45 +3,53 @@ package cs455.scaling;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 
 public class HashProcessor implements Runnable {
 
-    String ip;
-    SocketChannel client;
-    byte[] msgArray;
-    SelectionKey key;
+    // String ip;
+    // SocketChannel client;
+    // byte[] msgArray;
+    ArrayList<Message> messages;
 
-    HashProcessor(String ip, SocketChannel client, byte[] msgArray){
-        this.ip = ip;
-        this.client =  client;
-        this.msgArray = msgArray;
+    // HashProcessor(String ip, SocketChannel client, byte[] msgArray){
+    //     this.ip = ip;
+    //     this.client =  client;
+    //     this.msgArray = msgArray;
+    // }
+
+    HashProcessor (ArrayList<Message> messages) {
+        this.messages = messages; 
     }
 
     @Override
     public void run() {
         try {
 
-            ByteBuffer msgBuffer = ByteBuffer.allocate(41);
+            for (Message msg : messages) {
+                SocketChannel client = msg.client;
+                byte[] msgArray = msg.msgArray;
+                ByteBuffer msgBuffer = ByteBuffer.allocate(41);
             
-            //Hash the msg
-            String hash = SHA1FromBytes(msgArray);
+                //Hash the msg
+                String hash = SHA1FromBytes(msgArray);
 
-            byte diff = (byte) ((byte)40 - hash.length());
-            //Add padding amt as a header
-            String payload = Byte.toString(diff) + hash;
-            //Pad to length of 40
-            payload = pad(payload, diff);
+                byte diff = (byte) ((byte)40 - hash.length());
+                //Add padding amt as a header
+                String payload = Byte.toString(diff) + hash;
+                //Pad to length of 40
+                payload = pad(payload, diff);
 
-            //Prepare for writing
-            msgBuffer = ByteBuffer.wrap(payload.getBytes());
-            while (msgBuffer.hasRemaining()) {
-                client.write(msgBuffer);
+                //Prepare for writing
+                msgBuffer = ByteBuffer.wrap(payload.getBytes());
+                while (msgBuffer.hasRemaining()) {
+                    client.write(msgBuffer);
+                }
+                msgBuffer.clear();
             }
-            msgBuffer.clear();
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
