@@ -15,29 +15,53 @@ import java.util.concurrent.atomic.AtomicInteger;
     the thread safe queue for tasks to do and return to polling once they finish a task
 */
 public class ThreadPoolManager implements Runnable{
-    private int poolSize, batchSize;
+    private int poolSize, batchSize, batchTime;
     private ConcurrentLinkedQueue<Runnable> taskQueue;
     private LinkedBlockingQueue<Message> hashBatch;
+
+
+
     
-    ThreadPoolManager(int poolSize, int batchSize) {
+    ThreadPoolManager(int poolSize, int batchSize, int batchTime) {
         this.poolSize = poolSize;
         this.taskQueue = new ConcurrentLinkedQueue<>();
         this.hashBatch = new LinkedBlockingQueue<>(batchSize * 2);
         this.batchSize = batchSize;
+        this.batchTime = batchTime;
     }
 
     @Override
     public void run() {
         startPool();
         
-        while(true) {           
-            if (batchReady()) {
+        long start = System.currentTimeMillis();
+        while(true) {      
+            
+            
+            if (batchReady() || hasPassedBatchTime(start)) {
                 ArrayList<Message> messages = new ArrayList<>();
                 hashBatch.drainTo(messages, batchSize);
+
+                
                 addTask(new HashProcessor(messages));
+                start = System.currentTimeMillis();
+
             }
         }
     }
+
+   boolean hasPassedBatchTime(long start){
+     boolean isPassed = false;
+
+     long  passed = System.currentTimeMillis() - start;
+     if(passed >= (long )(batchSize * 1000) ){
+         isPassed = true;
+         System.out.println(" ****Batch Time Passed****");
+     }
+     System.out.println( "*****HasPassed" + isPassed);
+    return  isPassed;
+   }
+
 
     /*
         Make [poolSize] amount of workers and start them polling the taskQueue.
